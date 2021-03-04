@@ -13,44 +13,20 @@
     </header>
     <section class="py-12 blue lighten-5">
       <v-container class="py-0">
+        <p>Статистику можно вывести только открытых сообществ.</p>
         <div class="text-h5 mb-4">
-          Для вывода статистики необходимо<sup style="opacity: 0.7">1</sup>:
+          Как это сделать?
         </div>
         <ol class="mb-4">
           <li>
-            создать
-            <a href="https://vk.com/apps?act=manage" target="_blank"
-              >приложение VK</a
-            >
-            (Standalone-приложение или Сайт) под свое сообщество или
-            отредактировать существующее
+            ввести
+            <span class="font-weight-bold">ID сообщества</span>
           </li>
-          <li>
-            в Настройках приложения включить Open API и добавить адрес нашего
-            сайта в список Базовых доменов (и в Адрес сайта, если поле не
-            заполнено)
-          </li>
-          <li>
-            скопировать <span class="font-weight-bold">ID приложения</span> в
-            форму ниже
-          </li>
-          <li>
-            перейти в Настройки сообщества и скопировать
-            <span class="font-weight-bold">ID сообщества</span> из Основной
-            информации (без «public») в форму ниже
-          </li>
-          <li>нажать <span class="font-weight-bold">Загрузить</span></li>
+          <li><span class="font-weight-bold">Загрузить</span></li>
         </ol>
         <div style="max-width: 600px" class="mx-auto my-8">
           <v-card>
             <v-card-text>
-              <v-text-field
-                label="ID приложения"
-                outlined
-                v-model="apiId"
-                ref="apiId"
-                :rules="[() => !!apiId || 'Поле обязательно для заполнения']"
-              ></v-text-field>
               <v-text-field
                 label="ID сообщества"
                 outlined
@@ -66,7 +42,7 @@
                   elevation="2"
                   large
                   @click="getData"
-                  :disabled="loading"
+                  :disabled="buttonEnable === false"
                   v-html="loadButtonText"
                 ></v-btn>
               </div>
@@ -78,45 +54,38 @@
           пользовательскую информацию. Сервис предназначен исключительно для
           визуализации общедоступных данных.
         </p>
-        <p style="font-size: 12px; opacity: 0.7;">
-          <sup>1</sup> Система VK Open API позволяет передавать данные только
-          доверенным сайтам. Таким образом вы временно включаете адрес сайта VK
-          Prime Time в список доверенных. После просмотра статистики вы можете
-          удалить адрес нашего сайта из списка Базовых доменов, или вообще
-          удалить приложение в его Настройках.
-        </p>
         <p class="mb-0" style="font-size: 12px; opacity: 0.7;">
-          <sup>2</sup> Система VK Open API позволяет загружать данные только по
-          100 записям за раз.
+          <sup>1</sup> Система VK Open API позволяет загружать данные только 100
+          записей за раз.
         </p>
       </v-container>
     </section>
-    <section class="py-12 white" v-if="this.items.length">
+    <section class="py-12 white" v-if="currentItems && currentItems.length">
       <v-container>
         <ul class="mb-4">
           <li>
             <span class="font-weight-bold">Кол-во загруженных записей</span>:
-            {{ this.count }}
+            {{ currentItems.length }}
           </li>
           <li>
             <span class="font-weight-bold">Просмотров всего</span>:
-            {{ this.viewsTotal }}
+            {{ viewsTotal }}
           </li>
           <li>
             <span class="font-weight-bold">Лайков всего</span>:
-            {{ this.likesTotal }}
+            {{ likesTotal }}
           </li>
           <li>
             <span class="font-weight-bold">Репостов всего</span>:
-            {{ this.repostsTotal }}
+            {{ repostsTotal }}
           </li>
           <li>
             <span class="font-weight-bold">Комментов всего</span>:
-            {{ this.commentsTotal }}
+            {{ commentsTotal }}
           </li>
           <li>
             <span class="font-weight-bold">Диапазон дат</span>:
-            {{ this.dateRange }}
+            {{ dateRange }}
           </li>
         </ul>
         <chart
@@ -132,6 +101,16 @@
         >
       </v-container>
     </section>
+    <section
+      class="py-12 white"
+      v-if="currentItems && currentItems.length === 0"
+    >
+      <v-container>
+        <div class="font-weight-bold mb-2">
+          Кажется, в сообществе нет записей :(
+        </div>
+      </v-container>
+    </section>
   </div>
 </template>
 
@@ -144,20 +123,18 @@ export default {
     Chart,
   },
   data: () => ({
-    whatFor: false,
-    apiId: null,
-    communityId: null,
-    currentApiId: null,
-    currentCommunityId: null,
-    errors: [],
-    count: 0,
-    offset: 0,
-    loading: false,
-    items: [],
-    views: Array.from({ length: 25 }, () => []),
-    likes: Array.from({ length: 25 }, () => []),
-    reposts: Array.from({ length: 25 }, () => []),
-    comments: Array.from({ length: 25 }, () => []),
+    apiId: "7769410",
+    communityId: "24936435",
+    // currentCommunityId: null,
+    // communityConfirmed: false,
+    // count: 0,
+    // offset: 0,
+    // isThereMore: true,
+    process: false,
+    processStatus: null,
+    // checkingForMore: false,
+    collection: [],
+    // items: [],
     chartOptions: {
       maintainAspectRatio: false,
       scales: {
@@ -235,14 +212,106 @@ export default {
         ],
       };
     },
+    buttonEnable() {
+      return !this.process && !this.allLoaded;
+    },
     loadButtonText() {
-      return this.loading
-        ? "Загружается"
-        : this.count > 0 &&
-          this.apiId === this.currentApiId &&
-          this.communityId === this.currentCommunityId
-        ? "Загрузить еще 100<sup style='opacity: 0.7'>2</sup>"
-        : "Загрузить <sup style='opacity: 0.7'>2</sup>";
+      if (this.allLoaded === false) {
+        return "Загрузить еще<sup style='opacity: 0.7'>1</sup>";
+      }
+
+      if (this.allLoaded) {
+        return "Записей больше нет";
+      }
+
+      if (this.processStatus === "load") {
+        return "Загрузка";
+      }
+
+      if (this.processStatus === "preload") {
+        return "Предзагрузка следующих записей";
+      }
+
+      return "Загрузить <sup style='opacity: 0.7'>1</sup>";
+    },
+    currentObject() {
+      return (
+        this.collection.find((item) => item.id === this.communityId) ?? null
+      );
+    },
+    currentItems() {
+      return (
+        this.collection.find((item) => item.id === this.communityId)?.items ??
+        null
+      );
+    },
+    allLoaded() {
+      return (
+        this.currentItems &&
+        this.currentItems.length &&
+        this.currentObject &&
+        this.currentObject.allLoaded
+      );
+    },
+    views() {
+      const temp = Array.from({ length: 25 }, () => []);
+
+      if (this.currentItems) {
+        temp.forEach((item0, index) => {
+          this.currentItems.forEach((item) => {
+            if (new Date(item.date * 1000).getHours() === index) {
+              item0.push(item.views?.count ?? 0);
+            }
+          });
+        });
+      }
+
+      return temp;
+    },
+    likes() {
+      const temp = Array.from({ length: 25 }, () => []);
+
+      if (this.currentItems) {
+        temp.forEach((item0, index) => {
+          this.currentItems.forEach((item) => {
+            if (new Date(item.date * 1000).getHours() === index) {
+              item0.push(item.likes?.count ?? 0);
+            }
+          });
+        });
+      }
+
+      return temp;
+    },
+    reposts() {
+      const temp = Array.from({ length: 25 }, () => []);
+
+      if (this.currentItems) {
+        temp.forEach((item0, index) => {
+          this.currentItems.forEach((item) => {
+            if (new Date(item.date * 1000).getHours() === index) {
+              item0.push(item.reposts?.count ?? 0);
+            }
+          });
+        });
+      }
+
+      return temp;
+    },
+    comments() {
+      const temp = Array.from({ length: 25 }, () => []);
+
+      if (this.currentItems) {
+        temp.forEach((item0, index) => {
+          this.currentItems.forEach((item) => {
+            if (new Date(item.date * 1000).getHours() === index) {
+              item0.push(item.comments?.count ?? 0);
+            }
+          });
+        });
+      }
+
+      return temp;
     },
     viewsTotal() {
       return this.views
@@ -265,26 +334,22 @@ export default {
         .reduce((a, b) => a + b, 0);
     },
     dateRange() {
-      return this.items.length
+      return this.currentItems && this.currentItems.length
         ? `${new Date(
-            this.items[this.items.length - 1].date * 1000
+            this.currentItems[this.currentItems.length - 1].date * 1000
           ).getDate()}.${new Date(
-            this.items[this.items.length - 1].date * 1000
+            this.currentItems[this.currentItems.length - 1].date * 1000
           ).getMonth() + 1}.${new Date(
-            this.items[this.items.length - 1].date * 1000
+            this.currentItems[this.currentItems.length - 1].date * 1000
           ).getFullYear()} — ${new Date(
-            this.items[0].date * 1000
-          ).getDate()}.${new Date(this.items[0].date * 1000).getMonth() +
-            1}.${new Date(this.items[0].date * 1000).getFullYear()}`
-        : "";
+            this.currentItems[0].date * 1000
+          ).getDate()}.${new Date(this.currentItems[0].date * 1000).getMonth() +
+            1}.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
+        : null;
     },
   },
   methods: {
-    showWhatFor() {
-      this.whatFor = !this.whatFor;
-    },
     validateForm() {
-      this.$refs.apiId.validate(true);
       this.$refs.communityId.validate(true);
     },
     getData() {
@@ -292,15 +357,24 @@ export default {
 
       this.validateForm();
 
-      if (this.apiId && this.communityId) {
+      if (this.communityId) {
         // eslint-disable-next-line no-undef
         VK.init({
           apiId: that.apiId,
         });
 
-        this.currentApiId = this.apiId;
-        this.currentCommunityId = this.communityId;
-        this.loading = true;
+        if (
+          this.collection.filter((item) => item.id === this.communityId)
+            .length === 0
+        ) {
+          this.collection.push({
+            id: this.communityId,
+            items: [],
+            allLoaded: false,
+          });
+        }
+
+        this.process = true;
 
         // eslint-disable-next-line no-undef
         VK.Api.call(
@@ -308,33 +382,25 @@ export default {
           {
             owner_id: `-${that.communityId}`,
             count: 100,
-            offset: that.offset,
+            offset: that.currentItems.length,
             v: "5.130",
           },
           function(r) {
             if ("error" in r === false) {
-              that.items = that.items.concat(r.response.items);
-              that.count += r.response.items.length;
-              that.offset = that.count;
-
-              Array.from({ length: 25 }, (v, k) => k).forEach((item0) => {
-                r.response.items.forEach((item) => {
-                  if (new Date(item.date * 1000).getHours() === item0) {
-                    that.views[item0].push(item.views.count);
-                    that.likes[item0].push(item.likes.count);
-                    that.reposts[item0].push(item.reposts.count);
-                    that.comments[item0].push(item.comments.count);
-                  }
-                  if (new Date(item.date * 1000).getHours() === 0) {
-                    that.views[24].push(item.views.count);
-                    that.likes[24].push(item.likes.count);
-                    that.reposts[24].push(item.reposts.count);
-                    that.comments[24].push(item.comments.count);
-                  }
-                });
-              });
+              if (r.response.items.length) {
+                that.collection.find(
+                  (item) => item.id === that.communityId
+                ).items = that.collection
+                  .find((item) => item.id === that.communityId)
+                  .items.concat(r.response.items);
+              } else {
+                that.collection.find(
+                  (item) => item.id === that.communityId
+                ).allLoaded = true;
+              }
             }
-            that.loading = false;
+
+            that.process = false;
           }
         );
       }
