@@ -13,14 +13,17 @@
     </header>
     <section class="py-12 blue lighten-5">
       <v-container class="py-0">
-        <p>Статистику можно вывести только открытых сообществ.</p>
+        <p>
+          Статистику можно вывести только
+          <span class="text-decoration-underline">открытых</span> сообществ.
+        </p>
         <div class="text-h5 mb-4">
           Как это сделать?
         </div>
         <ol class="mb-4">
           <li>
             ввести
-            <span class="font-weight-bold">ID сообщества</span>
+            <span class="font-weight-bold">ID или короткое имя сообщества</span>
           </li>
           <li><span class="font-weight-bold">Загрузить</span></li>
         </ol>
@@ -28,7 +31,7 @@
           <v-card>
             <v-card-text>
               <v-text-field
-                label="ID сообщества"
+                label="ID или короткое имя сообщества"
                 outlined
                 v-model="communityId"
                 ref="communityId"
@@ -52,7 +55,8 @@
         <p>
           <span class="font-weight-bold">Дисклеймер</span>: сайт не собирает
           пользовательскую информацию. Сервис предназначен исключительно для
-          визуализации общедоступных данных.
+          визуализации
+          <span class="text-decoration-underline">общедоступных</span> данных.
         </p>
         <p class="mb-0" style="font-size: 12px; opacity: 0.7;">
           <sup>1</sup> Система VK Open API позволяет загружать данные только 100
@@ -60,54 +64,62 @@
         </p>
       </v-container>
     </section>
-    <section class="py-12 white" v-if="currentItems && currentItems.length">
+    <section class="py-12 white">
       <v-container>
-        <ul class="mb-4">
-          <li>
-            <span class="font-weight-bold">Кол-во загруженных записей</span>:
-            {{ currentItems.length }}
-          </li>
-          <li>
-            <span class="font-weight-bold">Просмотров всего</span>:
-            {{ viewsTotal }}
-          </li>
-          <li>
-            <span class="font-weight-bold">Лайков всего</span>:
-            {{ likesTotal }}
-          </li>
-          <li>
-            <span class="font-weight-bold">Репостов всего</span>:
-            {{ repostsTotal }}
-          </li>
-          <li>
-            <span class="font-weight-bold">Комментов всего</span>:
-            {{ commentsTotal }}
-          </li>
-          <li>
-            <span class="font-weight-bold">Диапазон дат</span>:
-            {{ dateRange }}
-          </li>
-        </ul>
-        <chart
-          :chartData="chartData"
-          :options="chartOptions"
-          class="mb-4"
-        ></chart>
-        <div class="font-weight-bold mb-2">
-          Формула расчета усредненного количества:
+        <div v-if="currentItems && currentItems.length">
+          <ul class="mb-4">
+            <li>
+              <span class="font-weight-bold">Кол-во загруженных записей</span>:
+              {{ currentItems.length }}
+            </li>
+            <li>
+              <span class="font-weight-bold">Просмотров всего</span>:
+              {{ viewsTotal }}
+            </li>
+            <li>
+              <span class="font-weight-bold">Лайков всего</span>:
+              {{ likesTotal }}
+            </li>
+            <li>
+              <span class="font-weight-bold">Репостов всего</span>:
+              {{ repostsTotal }}
+            </li>
+            <li>
+              <span class="font-weight-bold">Комментов всего</span>:
+              {{ commentsTotal }}
+            </li>
+            <li>
+              <span class="font-weight-bold">Диапазон дат</span>:
+              {{ dateRange }}
+            </li>
+          </ul>
+          <chart
+            :chartData="chartData"
+            :options="chartOptions"
+            class="mb-4"
+          ></chart>
         </div>
-        <span class="font-italic font-weight-bold px-2 py-2 blue lighten-5"
-          >P = (a1 + a2 + … an) / n</span
+        <div
+          class="font-weight-bold mb-2"
+          v-if="
+            currentObject &&
+              currentObject.error === null &&
+              currentItems &&
+              currentItems.length === 0 &&
+              !process
+          "
         >
-      </v-container>
-    </section>
-    <section
-      class="py-12 white"
-      v-if="currentItems && currentItems.length === 0"
-    >
-      <v-container>
-        <div class="font-weight-bold mb-2">
-          Кажется, в сообществе нет записей :(
+          <v-alert type="info">
+            Кажется, в сообществе нет записей :(
+          </v-alert>
+        </div>
+        <div
+          class="font-weight-bold mb-2"
+          v-if="currentObject && currentObject.error"
+        >
+          <v-alert type="error">
+            Ошибка VK Open API: {{ currentObject.error }}
+          </v-alert>
         </div>
       </v-container>
     </section>
@@ -124,17 +136,10 @@ export default {
   },
   data: () => ({
     apiId: "7769410",
-    communityId: "24936435",
-    // currentCommunityId: null,
-    // communityConfirmed: false,
-    // count: 0,
-    // offset: 0,
-    // isThereMore: true,
+    communityId: null,
     process: false,
     processStatus: null,
-    // checkingForMore: false,
     collection: [],
-    // items: [],
     chartOptions: {
       maintainAspectRatio: false,
       scales: {
@@ -145,7 +150,7 @@ export default {
             },
             scaleLabel: {
               display: true,
-              labelString: "Усредненное количество",
+              labelString: "Количество (среднее арифм.)",
             },
           },
         ],
@@ -236,14 +241,14 @@ export default {
     },
     currentObject() {
       return (
-        this.collection.find((item) => item.id === this.communityId) ?? null
+        this.collection.find(
+          (item) =>
+            item.id === this.communityId || item.inputId === this.communityId
+        ) ?? null
       );
     },
     currentItems() {
-      return (
-        this.collection.find((item) => item.id === this.communityId)?.items ??
-        null
-      );
+      return this.currentObject?.items ?? null;
     },
     allLoaded() {
       return (
@@ -358,51 +363,102 @@ export default {
       this.validateForm();
 
       if (this.communityId) {
+        this.process = true;
+
         // eslint-disable-next-line no-undef
         VK.init({
           apiId: that.apiId,
         });
 
         if (
-          this.collection.filter((item) => item.id === this.communityId)
-            .length === 0
+          that.collection.filter(
+            (item) =>
+              item.id === this.communityId || item.inputId === this.communityId
+          ).length === 0
         ) {
-          this.collection.push({
-            id: this.communityId,
-            items: [],
-            allLoaded: false,
-          });
-        }
-
-        this.process = true;
-
-        // eslint-disable-next-line no-undef
-        VK.Api.call(
-          "wall.get",
-          {
-            owner_id: `-${that.communityId}`,
-            count: 100,
-            offset: that.currentItems.length,
-            v: "5.130",
-          },
-          function(r) {
-            if ("error" in r === false) {
-              if (r.response.items.length) {
-                that.collection.find(
-                  (item) => item.id === that.communityId
-                ).items = that.collection
-                  .find((item) => item.id === that.communityId)
-                  .items.concat(r.response.items);
+          // eslint-disable-next-line no-undef
+          VK.Api.call(
+            "groups.getById",
+            {
+              group_id: that.communityId,
+              v: "5.130",
+            },
+            function(r) {
+              if ("error" in r === false) {
+                that.collection.push({
+                  id: JSON.stringify(r.response[0].id),
+                  inputId: that.communityId,
+                  items: [],
+                  allLoaded: false,
+                  error: null,
+                });
               } else {
-                that.collection.find(
-                  (item) => item.id === that.communityId
-                ).allLoaded = true;
+                that.collection.push({
+                  id: null,
+                  inputId: that.communityId,
+                  items: [],
+                  allLoaded: false,
+                  error: r.error.error_msg,
+                });
               }
             }
+          );
+        }
 
+        const func = async () => {
+          await new Promise((resolve) => {
+            const interval = setInterval(() => {
+              if (
+                that.collection.filter(
+                  (item) =>
+                    item.id === this.communityId ||
+                    item.inputId === this.communityId
+                ).length
+              ) {
+                resolve();
+                clearInterval(interval);
+              }
+            }, 100);
+          });
+
+          if (that.currentObject.id) {
+            // eslint-disable-next-line no-undef
+            VK.Api.call(
+              "wall.get",
+              {
+                owner_id: `-${that.currentObject.id}`,
+                count: 100,
+                offset: that.currentItems?.length || 0,
+                v: "5.130",
+              },
+              function(r) {
+                if ("error" in r === false) {
+                  if (r.response.items.length) {
+                    that.collection.find(
+                      (item) => item.id === that.currentObject.id
+                    ).items = that.collection
+                      .find((item) => item.id === that.currentObject.id)
+                      .items.concat(r.response.items);
+                  } else {
+                    that.collection.find(
+                      (item) => item.id === that.currentObject.id
+                    ).allLoaded = true;
+                  }
+                } else {
+                  that.collection.find(
+                    (item) => item.id === that.currentObject.id
+                  ).error = r.error.error_msg;
+                }
+
+                that.process = false;
+              }
+            );
+          } else {
             that.process = false;
           }
-        );
+        };
+
+        func();
       }
     },
   },
