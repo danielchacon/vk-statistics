@@ -2,6 +2,9 @@
   <div>
     <header class="py-14 white">
       <v-container class="py-0">
+        <div class="d-flex">
+          <icon-base icon-name="fire"><icon-fire /></icon-base>
+        </div>
         <h1 class="text-h2 text-center mb-3">
           <span class="blue--text">VK</span> Prime Time
         </h1>
@@ -14,12 +17,16 @@
     <section class="py-12 blue lighten-5">
       <v-container class="py-0">
         <p>
+          Посредством этого сервиса вы можете обратиться к системе VK Open API и
+          узнать статистику по количеству просмотров, лайков, репостов и
+          комментариев к записям на странице сообщества касательно времени их
+          размещения.
+        </p>
+        <p>
           Статистику можно вывести только
           <span class="text-decoration-underline">открытых</span> сообществ.
         </p>
-        <div class="text-h5 mb-4">
-          Как это сделать?
-        </div>
+        <div class="text-h5 mb-4">Как это сделать?</div>
         <ol class="mb-4">
           <li>
             ввести
@@ -58,7 +65,7 @@
           визуализации
           <span class="text-decoration-underline">общедоступных</span> данных.
         </p>
-        <p class="mb-0" style="font-size: 12px; opacity: 0.7;">
+        <p class="mb-0" style="font-size: 12px; opacity: 0.7">
           <sup>1</sup> Система VK Open API позволяет загружать данные только 100
           записей за раз.
         </p>
@@ -103,15 +110,13 @@
           class="font-weight-bold mb-2"
           v-if="
             currentObject &&
-              currentObject.error === null &&
-              currentItems &&
-              currentItems.length === 0 &&
-              !process
+            currentObject.error === null &&
+            currentItems &&
+            currentItems.length === 0 &&
+            !process
           "
         >
-          <v-alert type="info">
-            Кажется, в сообществе нет записей :(
-          </v-alert>
+          <v-alert type="info"> Кажется, в сообществе нет записей :( </v-alert>
         </div>
         <div
           class="font-weight-bold mb-2"
@@ -128,17 +133,20 @@
 
 <script>
 import Chart from "@/components/Chart";
+import IconBase from "@/components/icons/IconBase";
+import IconFire from "@/components/icons/IconFire";
 
 export default {
   name: "App",
   components: {
     Chart,
+    IconBase,
+    IconFire,
   },
   data: () => ({
     apiId: "7769410",
     communityId: null,
     process: false,
-    processStatus: null,
     collection: [],
     chartOptions: {
       maintainAspectRatio: false,
@@ -158,7 +166,7 @@ export default {
           {
             scaleLabel: {
               display: true,
-              labelString: "Часы",
+              labelString: "Время размещения",
             },
           },
         ],
@@ -221,23 +229,15 @@ export default {
       return !this.process && !this.allLoaded;
     },
     loadButtonText() {
-      if (this.allLoaded === false) {
-        return "Загрузить еще<sup style='opacity: 0.7'>1</sup>";
-      }
-
-      if (this.allLoaded) {
-        return "Записей больше нет";
-      }
-
-      if (this.processStatus === "load") {
+      if (this.process) {
         return "Загрузка";
+      } else if (this.allLoaded) {
+        return "Записей больше нет";
+      } else if (this.allLoaded === false) {
+        return "Загрузить еще<sup style='opacity: 0.7'>1</sup>";
+      } else {
+        return "Загрузить <sup style='opacity: 0.7'>1</sup>";
       }
-
-      if (this.processStatus === "preload") {
-        return "Предзагрузка следующих записей";
-      }
-
-      return "Загрузить <sup style='opacity: 0.7'>1</sup>";
     },
     currentObject() {
       return (
@@ -264,7 +264,13 @@ export default {
       if (this.currentItems) {
         temp.forEach((item0, index) => {
           this.currentItems.forEach((item) => {
-            if (new Date(item.date * 1000).getHours() === index) {
+            if (
+              new Date(item.date * 1000).getHours() === index &&
+              index !== 24
+            ) {
+              item0.push(item.views?.count ?? 0);
+            }
+            if (new Date(item.date * 1000).getHours() === 0 && index === 24) {
               item0.push(item.views?.count ?? 0);
             }
           });
@@ -279,7 +285,13 @@ export default {
       if (this.currentItems) {
         temp.forEach((item0, index) => {
           this.currentItems.forEach((item) => {
-            if (new Date(item.date * 1000).getHours() === index) {
+            if (
+              new Date(item.date * 1000).getHours() === index &&
+              index !== 24
+            ) {
+              item0.push(item.likes?.count ?? 0);
+            }
+            if (new Date(item.date * 1000).getHours() === 0 && index === 24) {
               item0.push(item.likes?.count ?? 0);
             }
           });
@@ -294,7 +306,13 @@ export default {
       if (this.currentItems) {
         temp.forEach((item0, index) => {
           this.currentItems.forEach((item) => {
-            if (new Date(item.date * 1000).getHours() === index) {
+            if (
+              new Date(item.date * 1000).getHours() === index &&
+              index !== 24
+            ) {
+              item0.push(item.reposts?.count ?? 0);
+            }
+            if (new Date(item.date * 1000).getHours() === 0 && index === 24) {
               item0.push(item.reposts?.count ?? 0);
             }
           });
@@ -309,7 +327,13 @@ export default {
       if (this.currentItems) {
         temp.forEach((item0, index) => {
           this.currentItems.forEach((item) => {
-            if (new Date(item.date * 1000).getHours() === index) {
+            if (
+              new Date(item.date * 1000).getHours() === index &&
+              index !== 24
+            ) {
+              item0.push(item.comments?.count ?? 0);
+            }
+            if (new Date(item.date * 1000).getHours() === 0 && index === 24) {
               item0.push(item.comments?.count ?? 0);
             }
           });
@@ -342,14 +366,17 @@ export default {
       return this.currentItems && this.currentItems.length
         ? `${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
-          ).getDate()}.${new Date(
-            this.currentItems[this.currentItems.length - 1].date * 1000
-          ).getMonth() + 1}.${new Date(
+          ).getDate()}.${
+            new Date(
+              this.currentItems[this.currentItems.length - 1].date * 1000
+            ).getMonth() + 1
+          }.${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
           ).getFullYear()} — ${new Date(
             this.currentItems[0].date * 1000
-          ).getDate()}.${new Date(this.currentItems[0].date * 1000).getMonth() +
-            1}.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
+          ).getDate()}.${
+            new Date(this.currentItems[0].date * 1000).getMonth() + 1
+          }.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
         : null;
     },
   },
@@ -362,7 +389,7 @@ export default {
 
       this.validateForm();
 
-      if (this.communityId) {
+      if (this.communityId && !this.process) {
         this.process = true;
 
         // eslint-disable-next-line no-undef
@@ -381,9 +408,10 @@ export default {
             "groups.getById",
             {
               group_id: that.communityId,
+              group_ids: that.communityId,
               v: "5.130",
             },
-            function(r) {
+            function (r) {
               if ("error" in r === false) {
                 that.collection.push({
                   id: JSON.stringify(r.response[0].id),
@@ -431,7 +459,7 @@ export default {
                 offset: that.currentItems?.length || 0,
                 v: "5.130",
               },
-              function(r) {
+              function (r) {
                 if ("error" in r === false) {
                   if (r.response.items.length) {
                     that.collection.find(
