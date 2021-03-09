@@ -2,8 +2,10 @@
   <div>
     <header class="py-14 white">
       <v-container class="py-0">
-        <div class="d-flex">
-          <icon-base icon-name="fire"><icon-fire /></icon-base>
+        <div class="d-flex justify-center mb-2">
+          <icon-base icon-name="fire" class="logo deep-orange--text"
+            ><icon-fire
+          /></icon-base>
         </div>
         <h1 class="text-h2 text-center mb-3">
           <span class="blue--text">VK</span> Prime Time
@@ -19,7 +21,7 @@
         <p>
           Посредством этого сервиса вы можете обратиться к системе VK Open API и
           узнать статистику по количеству просмотров, лайков, репостов и
-          комментариев к записям на странице сообщества касательно времени их
+          комментариев к записям на странице сообщества относительно времени их
           размещения.
         </p>
         <p>
@@ -34,7 +36,7 @@
           </li>
           <li><span class="font-weight-bold">Загрузить</span></li>
         </ol>
-        <div style="max-width: 600px" class="mx-auto my-8">
+        <div class="mx-auto my-8 id-form">
           <v-card>
             <v-card-text>
               <v-text-field
@@ -65,7 +67,7 @@
           визуализации
           <span class="text-decoration-underline">общедоступных</span> данных.
         </p>
-        <p class="mb-0" style="font-size: 12px; opacity: 0.7">
+        <p class="mb-0 footnote">
           <sup>1</sup> Система VK Open API позволяет загружать данные только 100
           записей за раз.
         </p>
@@ -110,10 +112,10 @@
           class="font-weight-bold mb-2"
           v-if="
             currentObject &&
-            currentObject.error === null &&
-            currentItems &&
-            currentItems.length === 0 &&
-            !process
+              currentObject.error === null &&
+              currentItems &&
+              currentItems.length === 0 &&
+              !process
           "
         >
           <v-alert type="info"> Кажется, в сообществе нет записей :( </v-alert>
@@ -166,7 +168,7 @@ export default {
           {
             scaleLabel: {
               display: true,
-              labelString: "Время размещения",
+              labelString: "Время размещения (час)",
             },
           },
         ],
@@ -366,17 +368,14 @@ export default {
       return this.currentItems && this.currentItems.length
         ? `${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
-          ).getDate()}.${
-            new Date(
-              this.currentItems[this.currentItems.length - 1].date * 1000
-            ).getMonth() + 1
-          }.${new Date(
+          ).getDate()}.${new Date(
+            this.currentItems[this.currentItems.length - 1].date * 1000
+          ).getMonth() + 1}.${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
           ).getFullYear()} — ${new Date(
             this.currentItems[0].date * 1000
-          ).getDate()}.${
-            new Date(this.currentItems[0].date * 1000).getMonth() + 1
-          }.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
+          ).getDate()}.${new Date(this.currentItems[0].date * 1000).getMonth() +
+            1}.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
         : null;
     },
   },
@@ -411,7 +410,7 @@ export default {
               group_ids: that.communityId,
               v: "5.130",
             },
-            function (r) {
+            function(r) {
               if ("error" in r === false) {
                 that.collection.push({
                   id: JSON.stringify(r.response[0].id),
@@ -459,7 +458,7 @@ export default {
                 offset: that.currentItems?.length || 0,
                 v: "5.130",
               },
-              function (r) {
+              function(r) {
                 if ("error" in r === false) {
                   if (r.response.items.length) {
                     that.collection.find(
@@ -492,3 +491,19 @@ export default {
   },
 };
 </script>
+
+<style lang="scss">
+.logo {
+  width: 100px;
+  height: 100px;
+}
+
+.id-form {
+  max-width: 600px;
+}
+
+.footnote {
+  font-size: 12px;
+  opacity: 0.7;
+}
+</style>
