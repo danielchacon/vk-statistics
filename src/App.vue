@@ -7,12 +7,12 @@
 </template>
 
 <script>
-import HomePage from "@/components/HomePage"
+import HomePage from "@/components/HomePage";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HomePage
+    HomePage,
   },
 
   data: () => ({
@@ -20,3 +20,13 @@ export default {
   }),
 };
 </script>
+
+<style lang="scss">
+@import "~vuetify/src/styles/settings/variables";
+
+@media #{map-get($display-breakpoints, 'xl-only')} {
+  .container {
+    max-width: 1185px !important;
+  }
+}
+</style>

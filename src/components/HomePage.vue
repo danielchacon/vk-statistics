@@ -1,14 +1,14 @@
 <template>
   <div>
-    <header class="py-14 white">
+    <header class="py-7 py-md-14 white">
       <v-container class="py-0">
         <div class="d-flex justify-center mb-2">
           <icon-base icon-name="fire" class="logo deep-orange--text"
             ><icon-fire
           /></icon-base>
         </div>
-        <h1 class="text-h2 text-center mb-3">
-          <span class="blue--text">VK</span> Prime Time
+        <h1 class="text-h4 text-md-h2 text-center mb-3 heading">
+          <span class="blue--text heading-vk">VK</span> Prime Time
         </h1>
         <div class="text-center text--secondary">
           Статистика популярности публикаций в сообществах VK по времени их
@@ -16,7 +16,7 @@
         </div>
       </v-container>
     </header>
-    <section class="py-12 blue lighten-5">
+    <section class="py-6 py-md-12 blue lighten-5">
       <v-container class="py-0">
         <p>
           Посредством этого сервиса вы можете обратиться к системе VK Open API и
@@ -73,7 +73,7 @@
         </p>
       </v-container>
     </section>
-    <section class="py-12 white">
+    <section class="py-6 py-md-12 white">
       <v-container>
         <div v-if="currentItems && currentItems.length">
           <ul class="mb-4">
@@ -493,6 +493,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "~vuetify/src/styles/settings/variables";
+
 .logo {
   width: 100px;
   height: 100px;
