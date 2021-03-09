@@ -73,7 +73,18 @@
         </p>
       </v-container>
     </section>
-    <section class="py-6 py-md-12 white">
+    <section
+      class="py-6 py-md-12 white"
+      v-if="
+        (currentItems && currentItems.length) ||
+          (currentObject &&
+            currentObject.error === null &&
+            currentItems &&
+            currentItems.length === 0 &&
+            !process) ||
+          (currentObject && currentObject.error)
+      "
+    >
       <v-container>
         <div v-if="currentItems && currentItems.length">
           <ul class="mb-4">
@@ -130,6 +141,18 @@
         </div>
       </v-container>
     </section>
+    <footer class="d-flex justify-center py-3 py-md-6">
+      <div class="footer-btn-container">
+        <a
+          class="github-button"
+          href="https://github.com/danielchacon/vk-statistics"
+          data-icon="octicon-star"
+          data-size="large"
+          aria-label="Star danielchacon/vk-statistics on GitHub"
+          >Star</a
+        >
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -507,5 +530,9 @@ export default {
 .footnote {
   font-size: 12px;
   opacity: 0.7;
+}
+
+.footer-btn-container > * {
+  display: flex;
 }
 </style>
