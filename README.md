@@ -1,3 +1,5 @@
+![](https://vk-prime-time.netlify.app/material-logo.png)
+
 # VK Prime Time
 Статистика популярности публикаций в сообществах VK по времени их размещения 
 
@@ -5,6 +7,8 @@
 
 ## Демонстрация
 https://vk-prime-time.netlify.app/
+
+[Скрин](https://vk-prime-time.netlify.app/screenshot-release-09-03-2021.png)
 
 ## Под капотом
                 
