@@ -1,24 +1,16 @@
-# vk-statistics
+# VK Prime Time
+Статистика популярности публикаций в сообществах VK по времени их размещения 
 
-## Project setup
-```
-npm install
-```
+Посредством этого сервиса вы можете обратиться к системе VK Open API и узнать статистику по количеству просмотров, лайков, репостов и комментариев к записям на странице сообщества относительно времени их размещения.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Демонстрация
+https://vk-prime-time.netlify.app/
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Под капотом
+                
++ Vue.js
++ Vuetify
++ VK Open API
++ Chart.js (vue-chartjs)
++ Material Icons
+                
