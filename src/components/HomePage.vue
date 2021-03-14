@@ -7,28 +7,30 @@
             ><icon-fire
           /></icon-base>
         </div>
-        <h1 class="text-h4 text-md-h2 text-center mb-3 heading">
-          <span class="blue--text heading-vk">VK</span> Prime Time
+        <h1 style="font-size: 1rem; font-weight: normal;">
+          <div class="text-h4 text-md-h2 text-center mb-3 heading"><span class="blue--text heading-vk">VK</span> Prime Time</div>
+          <div class="text-center text--secondary">
+            Анализ популярности постов в сообществах ВК по времени их размещения
+          </div>
         </h1>
-        <div class="text-center text--secondary">
-          Статистика популярности публикаций в сообществах VK по времени их
-          размещения
-        </div>
       </v-container>
     </header>
     <section class="py-6 py-md-12 blue lighten-5">
       <v-container class="py-0">
         <p>
+          <strong>В какое время выкладывать посты</strong> — в какой-то момент
+          этим вопросом задаются все руководители сообществ ВКонтакте.
           Посредством этого сервиса вы можете обратиться к системе VK Open API и
-          узнать статистику по количеству просмотров, лайков, репостов и
-          комментариев к записям на странице сообщества относительно времени их
-          размещения.
+          получить <strong>статистику</strong> по количеству просмотров, лайков,
+          репостов и комментариев к записям на странице сообщества относительно
+          времени их размещения. И как следствие: выбрать
+          <strong>лучшее время для публикаций</strong> ваших постов.
         </p>
         <p>
           Статистику можно вывести только
           <span class="text-decoration-underline">открытых</span> сообществ.
         </p>
-        <div class="text-h5 mb-4">Как это сделать?</div>
+        <h2 class="text-h5 mb-4">Как узнать лучшее время для публикаций?</h2>
         <ol class="mb-4">
           <li>
             ввести
@@ -77,12 +79,12 @@
       class="py-6 py-md-12 white"
       v-if="
         (currentItems && currentItems.length) ||
-          (currentObject &&
-            currentObject.error === null &&
-            currentItems &&
-            currentItems.length === 0 &&
-            !process) ||
-          (currentObject && currentObject.error)
+        (currentObject &&
+          currentObject.error === null &&
+          currentItems &&
+          currentItems.length === 0 &&
+          !process) ||
+        (currentObject && currentObject.error)
       "
     >
       <v-container>
@@ -123,10 +125,10 @@
           class="font-weight-bold mb-2"
           v-if="
             currentObject &&
-              currentObject.error === null &&
-              currentItems &&
-              currentItems.length === 0 &&
-              !process
+            currentObject.error === null &&
+            currentItems &&
+            currentItems.length === 0 &&
+            !process
           "
         >
           <v-alert type="info"> Кажется, в сообществе нет записей :( </v-alert>
@@ -391,14 +393,17 @@ export default {
       return this.currentItems && this.currentItems.length
         ? `${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
-          ).getDate()}.${new Date(
-            this.currentItems[this.currentItems.length - 1].date * 1000
-          ).getMonth() + 1}.${new Date(
+          ).getDate()}.${
+            new Date(
+              this.currentItems[this.currentItems.length - 1].date * 1000
+            ).getMonth() + 1
+          }.${new Date(
             this.currentItems[this.currentItems.length - 1].date * 1000
           ).getFullYear()} — ${new Date(
             this.currentItems[0].date * 1000
-          ).getDate()}.${new Date(this.currentItems[0].date * 1000).getMonth() +
-            1}.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
+          ).getDate()}.${
+            new Date(this.currentItems[0].date * 1000).getMonth() + 1
+          }.${new Date(this.currentItems[0].date * 1000).getFullYear()}`
         : null;
     },
   },
@@ -433,7 +438,7 @@ export default {
               group_ids: that.communityId,
               v: "5.130",
             },
-            function(r) {
+            function (r) {
               if ("error" in r === false) {
                 that.collection.push({
                   id: JSON.stringify(r.response[0].id),
@@ -481,7 +486,7 @@ export default {
                 offset: that.currentItems?.length || 0,
                 v: "5.130",
               },
-              function(r) {
+              function (r) {
                 if ("error" in r === false) {
                   if (r.response.items.length) {
                     that.collection.find(
