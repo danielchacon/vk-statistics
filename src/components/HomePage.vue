@@ -145,6 +145,25 @@
         </div>
       </v-container>
     </section>
+    <section v-if="blockError">
+      <v-container>
+        <div class="font-weight-bold mb-2">
+          <v-alert type="error">
+            Работа сайта заблокирована браузером. Возможная причина: браузер
+            видит угрозу в запросах к Google, Yandex и VK. Зачастую проблема
+            встречается в Firefox. Вы можете воспользоваться другим браузером
+            или отключить блокировку. Для Firefox подробнее
+            <a
+              href="https://support.mozilla.org/ru/kb/uluchshennaya-zashita-ot-otslezhivaniya-v-firefox-"
+              class="white--text"
+              target="_blank"
+              >тут</a
+            >.
+          </v-alert>
+        </div>
+      </v-container>
+    </section>
+
     <footer class="d-flex justify-center py-3 py-md-6">
       <div class="footer-btn-container">
         <a
@@ -201,6 +220,7 @@ export default {
         ],
       },
     },
+    blockError: false,
   }),
   computed: {
     chartData() {
@@ -415,6 +435,59 @@ export default {
 
       this.validateForm();
 
+      const func = async () => {
+        await new Promise((resolve) => {
+          const interval = setInterval(() => {
+            if (
+              that.collection.filter(
+                (item) =>
+                  item.id === this.communityId ||
+                  item.inputId === this.communityId
+              ).length
+            ) {
+              resolve();
+              clearInterval(interval);
+            }
+          }, 100);
+        });
+
+        if (that.currentObject.id) {
+          // eslint-disable-next-line no-undef
+          VK.Api.call(
+            "wall.get",
+            {
+              owner_id: `-${that.currentObject.id}`,
+              count: 100,
+              offset: that.currentItems?.length || 0,
+              v: "5.130",
+            },
+            function(r) {
+              if ("error" in r === false) {
+                if (r.response.items.length) {
+                  that.collection.find(
+                    (item) => item.id === that.currentObject.id
+                  ).items = that.collection
+                    .find((item) => item.id === that.currentObject.id)
+                    .items.concat(r.response.items);
+                } else {
+                  that.collection.find(
+                    (item) => item.id === that.currentObject.id
+                  ).allLoaded = true;
+                }
+              } else {
+                that.collection.find(
+                  (item) => item.id === that.currentObject.id
+                ).error = r.error.error_msg;
+              }
+
+              that.process = false;
+            }
+          );
+        } else {
+          that.process = false;
+        }
+      };
+
       if (this.communityId && !this.process) {
         this.process = true;
 
@@ -423,96 +496,71 @@ export default {
           apiId: that.apiId,
         });
 
+        that.blockError = false;
+
         if (
           that.collection.filter(
             (item) =>
               item.id === this.communityId || item.inputId === this.communityId
           ).length === 0
         ) {
-          // eslint-disable-next-line no-undef
-          VK.Api.call(
-            "groups.getById",
-            {
-              group_id: that.communityId,
-              group_ids: that.communityId,
-              v: "5.130",
-            },
-            function(r) {
-              if ("error" in r === false) {
-                that.collection.push({
-                  id: JSON.stringify(r.response[0].id),
-                  inputId: that.communityId,
-                  items: [],
-                  allLoaded: false,
-                  error: null,
-                });
-              } else {
-                that.collection.push({
-                  id: null,
-                  inputId: that.communityId,
-                  items: [],
-                  allLoaded: false,
-                  error: r.error.error_msg,
-                });
-              }
-            }
-          );
-        }
+          var xhr = new XMLHttpRequest();
+          xhr.withCredentials = true;
 
-        const func = async () => {
-          await new Promise((resolve) => {
-            const interval = setInterval(() => {
-              if (
-                that.collection.filter(
-                  (item) =>
-                    item.id === this.communityId ||
-                    item.inputId === this.communityId
-                ).length
-              ) {
-                resolve();
-                clearInterval(interval);
-              }
-            }, 100);
-          });
+          xhr.addEventListener("readystatechange", function() {
+            if (this.readyState === 4) {
+              if (JSON.parse(this.responseText).auth === true) {
+                that.blockError = false;
 
-          if (that.currentObject.id) {
-            // eslint-disable-next-line no-undef
-            VK.Api.call(
-              "wall.get",
-              {
-                owner_id: `-${that.currentObject.id}`,
-                count: 100,
-                offset: that.currentItems?.length || 0,
-                v: "5.130",
-              },
-              function(r) {
-                if ("error" in r === false) {
-                  if (r.response.items.length) {
-                    that.collection.find(
-                      (item) => item.id === that.currentObject.id
-                    ).items = that.collection
-                      .find((item) => item.id === that.currentObject.id)
-                      .items.concat(r.response.items);
-                  } else {
-                    that.collection.find(
-                      (item) => item.id === that.currentObject.id
-                    ).allLoaded = true;
+                // eslint-disable-next-line no-undef
+                VK.Api.call(
+                  "groups.getById",
+                  {
+                    group_id: that.communityId,
+                    group_ids: that.communityId,
+                    v: "5.130",
+                  },
+                  function(r) {
+                    if ("error" in r === false) {
+                      that.collection.push({
+                        id: JSON.stringify(r.response[0].id),
+                        inputId: that.communityId,
+                        items: [],
+                        allLoaded: false,
+                        error: null,
+                      });
+                    } else {
+                      that.collection.push({
+                        id: null,
+                        inputId: that.communityId,
+                        items: [],
+                        allLoaded: false,
+                        error: r.error.error_msg,
+                      });
+                    }
                   }
-                } else {
-                  that.collection.find(
-                    (item) => item.id === that.currentObject.id
-                  ).error = r.error.error_msg;
-                }
+                );
 
+                func();
+              } else {
+                that.blockError = true;
                 that.process = false;
               }
-            );
-          } else {
-            that.process = false;
-          }
-        };
+            }
+          });
 
-        func();
+          xhr.open(
+            "GET",
+            `https://login.vk.com/?act=openapi&oauth=1&aid=7769410&location=${
+              process.env.NODE_ENV === "development"
+                ? "localhost"
+                : "vk-prime-time.netlify.app"
+            }&new=1`
+          );
+          xhr.setRequestHeader("Cookie", "remixlang=0");
+
+          xhr.send();
+        }
       }
     },
   },
