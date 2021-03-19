@@ -220,6 +220,7 @@ export default {
         ],
       },
     },
+    authReady: false,
     blockError: false,
   }),
   computed: {
@@ -435,6 +436,55 @@ export default {
 
       this.validateForm();
 
+      const func0 = async () => {
+        await new Promise((resolve) => {
+          const interval = setInterval(() => {
+            if (that.authReady) {
+              resolve();
+              clearInterval(interval);
+            }
+          }, 100);
+        });
+
+        if (
+          that.collection.filter(
+            (item) =>
+              item.id === this.communityId || item.inputId === this.communityId
+          ).length === 0
+        ) {
+          // eslint-disable-next-line no-undef
+          VK.Api.call(
+            "groups.getById",
+            {
+              group_id: that.communityId,
+              group_ids: that.communityId,
+              v: "5.130",
+            },
+            function(r) {
+              if ("error" in r === false) {
+                that.collection.push({
+                  id: JSON.stringify(r.response[0].id),
+                  inputId: that.communityId,
+                  items: [],
+                  allLoaded: false,
+                  error: null,
+                });
+              } else {
+                that.collection.push({
+                  id: null,
+                  inputId: that.communityId,
+                  items: [],
+                  allLoaded: false,
+                  error: r.error.error_msg,
+                });
+              }
+            }
+          );
+        }
+
+        func();
+      };
+
       const func = async () => {
         await new Promise((resolve) => {
           const interval = setInterval(() => {
@@ -496,14 +546,7 @@ export default {
           apiId: that.apiId,
         });
 
-        that.blockError = false;
-
-        if (
-          that.collection.filter(
-            (item) =>
-              item.id === this.communityId || item.inputId === this.communityId
-          ).length === 0
-        ) {
+        if (!this.authReady) {
           var xhr = new XMLHttpRequest();
           xhr.withCredentials = true;
 
@@ -511,37 +554,7 @@ export default {
             if (this.readyState === 4) {
               if (JSON.parse(this.responseText).auth === true) {
                 that.blockError = false;
-
-                // eslint-disable-next-line no-undef
-                VK.Api.call(
-                  "groups.getById",
-                  {
-                    group_id: that.communityId,
-                    group_ids: that.communityId,
-                    v: "5.130",
-                  },
-                  function(r) {
-                    if ("error" in r === false) {
-                      that.collection.push({
-                        id: JSON.stringify(r.response[0].id),
-                        inputId: that.communityId,
-                        items: [],
-                        allLoaded: false,
-                        error: null,
-                      });
-                    } else {
-                      that.collection.push({
-                        id: null,
-                        inputId: that.communityId,
-                        items: [],
-                        allLoaded: false,
-                        error: r.error.error_msg,
-                      });
-                    }
-                  }
-                );
-
-                func();
+                that.authReady = true;
               } else {
                 that.blockError = true;
                 that.process = false;
@@ -561,6 +574,8 @@ export default {
 
           xhr.send();
         }
+
+        func0();
       }
     },
   },
